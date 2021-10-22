@@ -556,6 +556,8 @@ Take a look to the shape of this function. It has a lot of recursive calls in so
 
 We have seen the recursion scheme pattern with lot of examples. The main functions has been presented but we have left under the hood some details and mathematical justifications of the results, but I tried to focus on the intuition and the constantly relation between mathematical diagrams and code, which is a funny way of writing code. 
 
-Some references I used to write this post 
+Some references I used to write this post are:
+
+**Dar referencias**
 
 
