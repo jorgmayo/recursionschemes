@@ -22,8 +22,9 @@ A_f \arrow{r}{\varphi_f}& B_g
 A \arrow[r, "ana"] \arrow[rr, "cata\circ ana"', bend right] & {Fix[RingF]} \arrow[r, "cata"] & B
 \end{tikzcd}
 
+
 \begin{tikzcd}
-{Fix[RingF]} \arrow[r, Rightarrow] & (Elem \arrow[r] & Z) \arrow[r] & {((Z,Z)} \arrow[r, "add"] & Z) \arrow[r] & {((Z,Z)} \arrow[r, "mult"] & Z) \arrow[r, Rightarrow] & Z
+{Fix[RingF]} \arrow[rr, Rightarrow] &  & {(Int\rightarrow Z, (Z,Z)\rightarrow Z, (Z,Z)\rightarrow Z)} \arrow[r] & Z) \arrow[rr, Rightarrow] &  & Z
 \end{tikzcd}
 
 \begin{tikzcd}
@@ -35,7 +36,7 @@ A \arrow[r, "ana"] \arrow[rr, "cata\circ ana"', bend right] & {Fix[RingF]} \arro
 \end{tikzcd}
 
 \begin{tikzcd}
-{Fix[RingF]} \arrow[rr, Rightarrow] \arrow[rrrr, "cata"', bend right] &  & {(RingF[Z]} \arrow[r, "alg"] & Z) \arrow[r, Rightarrow] & Z
+{Fix[RingF]} \arrow[rr, Rightarrow] \arrow[rrrr, "cata(alg)"', bend right] &  & {(RingF[Z]} \arrow[r, "alg"] & Z) \arrow[r, Rightarrow] & Z
 \end{tikzcd}
 
 

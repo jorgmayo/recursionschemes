@@ -197,19 +197,19 @@ We actually have reached the first goal, i.e., to find an inductive abstraction 
 
 ----
 
-If we take a fast recap, what we have is a functor `RingF` and our `Fix` that can transform our functor into a recursive data Type. The `Fix[]` type constructor has two functions, called fix and unfix that, as we alrready said, defines the equality `Fix[F] = F[Fix[F]]` for any functor. Our goal of lifting `evalToInt: RingF[Int] => Int` can be translated to find a function `m: Fix[F] => Int` related to `evalToInt`. Lest make a simple diagram that represent all this ideas
+If we take a fast recap, what we have is a functor `RingF` and our `Fix` that can transform our functor into an inductive data type. The `Fix[_]` type constructor has two functions, called `fix` and `unfix` that, as we already said, defines the type equality `Fix[F] = F[Fix[F]]`. Our goal now is to transform our algebra `evalToInt: RingF[Int] => Int` into a function that can traverse our inductive data type. This is equivalent to find a function `m: Fix[RingF] => Int`. More generally, we can represent this idea for every functor and every algebra `eval: F[A] => A`. Lest make a simple diagram that represent all this ideas
 
 <p align="center" >
     <img src="examples/example3.png" /> 
 </p>      
 
-Looking a this diagram, if we want to define `m` we only need to follow the diagram and composing the functions, i.e, taking `m` as `eval o map(m) o unfix`. But, to understand it better, lets see first the case of `RingF` and `evalToInt`:
+Looking at this diagram, if we want to define `m` we only need to read the diagram and composing the functions, i.e., taking `m` as `eval o map(m) o unfix`. But, to understand it better, lets see first the case of `RingF` and `evalToInt`:
 
 <p align="center">
     <img src="examples/example4.png"/>
 </p>      
 
-In this case, the recursive call comes from the call `.map(m)`, because `m` is the function we are defining. In this case, we can implement such function as 
+In this case, the recursive call comes from the call `map(m)`, because `m` is the function we are defining. In this case, we can implement such function as 
 
 ```scala
 def cata: Fix[RingF] => Int = {
@@ -349,7 +349,7 @@ And, using som basic type equivalences, we can turn this last expression into
     <img src="examples/example11.png" /> 
 </p>  
 
-And, finally, the signature of this Either (that in scala are case classes of the same trait) is basically the signature of our algebra: 
+And, finally, the signature of this triplet can be understood in scala as a trait. This has the signature of our algebra: 
 
 <p align="center" >
     <img src="examples/example12.png" /> 
@@ -361,7 +361,72 @@ And, of course, reading the composition of arrows we get the shape of cata:
     <img src="examples/example13.png" /> 
 </p>  
 
-So, af we have already see, `foldR` is exactly the same idea as `cata`, but in a more explicit way. Both of this represents the essence of recursion and can be understood as an equivalence, this is known as ....
+So, as we have already see, `foldR` is exactly the same idea as `cata`, but in a more explicit way. In both caseswe have a general abstraction of recursion.
+
+## A philosophical interpretation of folds and cata
+
+---
+
+What we can conclude until this point is that cata is the abstraction of recursion. In some sense, the inductive type `Ring` is a set with elements inside it of the form of expressions. In the other hand, `cata` is a way of transforming evaluations of operations into real evaluations of an exaprssion. So, in some sense, `cata` is a way of looking to `Ring`: `cata` produces an observation of `Ring` for every algebra. A natural question can arise fom this point: _if we know all the observations  of an inductive type, can we know everything of that type?_. The answer is afirmative and is related to the motivation of cathegory theory. Lets build this equivalence for our example. We want to build an equivalence, in the same sense as we did with the equality `Fix[RingF] = RingF[Fix[RingF]]`. We need to build two functions with shape 
+
+<p align="center" >
+    <img src="examples/example16.png" /> 
+</p> 
+
+and with the property that both compositions are the identity function. `Alg[Z]` is an abrevation for the signature `RingF[Z] => Z`. As we said before, this pair of functions with this property is called an isomorphism and we can write this signature in scala as: 
+
+```scala
+trait Iso[A, B] {
+    def to(a: A): B
+    def from(b: B): A
+}
+```
+
+So we need to implement an `Iso` between `Fix[RingF]` and something that represents the functions of type `Alg[Z] => Z`. We can wrap this last type in a trait 
+
+```scala
+type Alg[Z] = RingF[Z] => Z
+trait BBEnc {
+    def apply[Z](alg: Alg[Z]): Z
+}
+```
+So, our goal is almost done, the `to` arrow is `cata` because of the diagrams of the last section and, to build `from`, we only need to fix the objects while we are traversing the structure in the observations of `BBEnc`. All can be summarize in the following implementation of `Iso[Fix[RingF], BBEnc]`:
+
+```scala
+val RingIso = new Iso[Fix[RingF], BBEnc] {
+    override def to(expr: Fix[RingF]): BBEnc = {
+        new BBEnc {
+            override def apply[Z](alg: Alg[Z]): Z = {
+                cata(alg)(ringFunctor)(expr)
+            }
+        }
+    }
+    
+    override def from(enc: BBEnc): Fix[RingF] = {
+        def myAlg: Alg[Fix[RingF]] = {
+            case Zero => Fix[RingF](Zero)
+            case One => Fix[RingF](One)
+            case Elem(x) => Fix[RingF](Elem(x))
+            case Add(x, y) => Fix[RingF](Add(x, y))
+            case Mult(x, y) => Fix[RingF](Mult(x, y))
+        }
+        
+        enc.apply(myAlg)
+
+    }
+}
+```
+
+Finally, we can check the indentity of the composition with our `expression1`
+
+```scala
+RingIso.from(RingIso.to(expression1)) == expression1
+
+---
+res73: Boolean = true
+```
+
+As a conclussion, we can interpret inductive types as the set of all observations (evaluations) of a certain functor, i.e, the evaluation of algebras. This is, in fact, an apliccation of a very deep result called the **Yonneda lemma**, in cathegory theory. In this particular case, these interpretations are known as the **Böhm-Berarducci** encoding for the System F lambda calculus. 
 
 
 ## F-coalgebras and Anamorphisms
@@ -417,10 +482,6 @@ expression3: Fix[RingF] = Fix(
 <p align="center" >
     <img src="examples/example5.png" /> 
 </p>  
-
-### A real example: Streams 
-
----
 
 ## Hylomorphisms
 
