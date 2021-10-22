@@ -426,7 +426,7 @@ RingIso.from(RingIso.to(expression1)) == expression1
 res73: Boolean = true
 ```
 
-As a conclussion, we can interpret inductive types as the set of all observations (evaluations) of a certain functor, i.e, the evaluation of algebras. This is, in fact, an apliccation of a very deep result called the **Yonneda lemma**, in cathegory theory. In this particular case, these interpretations are known as the **Böhm-Berarducci** encoding for the System F lambda calculus. 
+As a conclussion, we can interpret inductive types as the set of all observations (evaluations) of a certain functor, i.e, the evaluation of algebras. This is, in fact, an apliccation of a very deep result called the **Yonneda lemma**, in cathegory theory. In this particular case, these interpretations are known as the **Böhm-Berarducci** encoding for the System F lambda calculus. This encoding explains the name of our type `BBEnc`. 
 
 
 ## F-coalgebras and Anamorphisms
@@ -530,7 +530,8 @@ We are gonne to end this talk with one last comment about recursive strctures. W
 
 ```scala
 def reduce[A]: RingF[Fix[RingF]] => Fix[RingF] = {
-    case Add(x, y) => if (x == y) Fix[RingF](Mult(y, Fix[RingF](Elem(2)))) else Fix[RingF](Add(x,y))
+    case Add(x, y) => if (x == y) Fix[RingF](Mult(y, Fix[RingF](Elem(2)))) 
+                      else Fix[RingF](Add(x,y))
     case other => Fix[RingF](other)
 }
 ```
@@ -549,8 +550,12 @@ def reduce: Ring => Ring = {
 
 Take a look to the shape of this function. It has a lot of recursive calls in so many places, what is error prompt and, second, its to verbose, because all is the same but for the case Add(x,x). This is one of the advantage of the recursion scheme pattern. 
 
-## Further references
+## Conclusions and References
 
 ---
 
-We have seen the recursion scheme pattern with lot of examples. The main functions has been presented but we have left under the hood some details and mathematica justifications of the results. If you want to get formal proofs of the equivalence of `Fix[F] = F[Fix[F]]` (called Lambeks lemma) and a presentation of .... 
+We have seen the recursion scheme pattern with lot of examples. The main functions has been presented but we have left under the hood some details and mathematical justifications of the results, but I tried to focus on the intuition and the constantly relation between mathematical diagrams and code, which is a funny way of writing code. 
+
+Some references I used to write this post 
+
+
