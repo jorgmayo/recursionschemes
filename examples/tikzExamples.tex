@@ -49,4 +49,8 @@ A \arrow[rr, "f"'] \arrow[u, "F", dotted] & {} \arrow[u, "map", dotted] & B \arr
 {RingF[RingF[Int]]} \arrow[rr, "map(evalToInt)"] \arrow[rrrr, "evalToInt\quad\circ\quad map(evalToInt)", bend left] & {}                           & {RingF[Int]} \arrow[rr, "evalToInt"] &  & Int \\
 {RingF[Int]} \arrow[rr, "evalToInt"'] \arrow[u, "RingF", dotted]                                                  & {} \arrow[u, "map"', dotted] & Int \arrow[u, "RingF"', dotted]      &  &    
 \end{tikzcd}
+
+\begin{tikzcd}
+{Fix[RingF]} \arrow[rr, "to", bend left] &  & {(Alg[Z]} \arrow[r] \arrow[ll, "from", bend left] & Z)
+\end{tikzcd}
 \end{document} 

@@ -193,23 +193,23 @@ Yow can compare this with expression1.
 
 We actually have reached the first goal, i.e., to find an inductive abstraction for our starting functor `RingF`. What its left is to take our way to evaluate this data type starting with our `evalToInt` function.
 
-### Catamorphisms
+## Catamorphisms
 
 ----
 
-If we take a fast recap, what we have is a functor `RingF` and our `Fix` that can transform our functor into an inductive data type. The `Fix[_]` type constructor has two functions, called `fix` and `unfix` that, as we already said, defines the type equality `Fix[F] = F[Fix[F]]`. Our goal now is to transform our algebra `evalToInt: RingF[Int] => Int` into a function that can traverse our inductive data type. This is equivalent to find a function `m: Fix[RingF] => Int`. More generally, we can represent this idea for every functor and every algebra `eval: F[A] => A`. Lest make a simple diagram that represent all this ideas
+If we take a fast recap, what we have is a functor `RingF` and our `Fix` that can transform our functor into an inductive data type. The `Fix[_]` type constructor has two functions, called `fix` and `unfix` that, as we already said, defines the type equality (isomorphism) `Fix[F] = F[Fix[F]]`. Our goal now is to transform our algebra `evalToInt: RingF[Int] => Int` into a function that can traverse our inductive data type. This is equivalent to find a function `m: Fix[RingF] => Int` out of `evalToInt`. More generally, we can represent this idea for every functor and every algebra `eval: F[A] => A`. Lets make a simple diagram that represent all this ideas
 
 <p align="center" >
     <img src="examples/example3.png" /> 
 </p>      
 
-Looking at this diagram, if we want to define `m` we only need to read the diagram and composing the functions, i.e., taking `m` as `eval o map(m) o unfix`. But, to understand it better, lets see first the case of `RingF` and `evalToInt`:
+Looking at this diagram, if we want to define `m` we only need to read the diagram and composing the functions, i.e., taking `m` as `eval o map(m) o unfix`. But, to understand it better, let's see first the case of `RingF` and `evalToInt`:
 
 <p align="center">
     <img src="examples/example4.png"/>
 </p>      
 
-In this case, the recursive call comes from the call `map(m)`, because `m` is the function we are defining. In this case, we can implement such function as 
+In this case, the recursive call comes from `map(m)`, because `m` is the function we are defining. We can implement such a function as 
 
 ```scala
 def cata: Fix[RingF] => Int = {
@@ -221,31 +221,27 @@ cata(exp1)
 res: Int = 16
 ```
 
-We can follow each step of recursion as:
+We can follow each step of recursion in the following gif:
 
 ![](examples/animation.gif)
 
-So we are done! we achive our goal of lifting evalToInt to our recursive data type `Ring`. But, our implementation of `cata` looks pretty particular for this case. As we can see in our first diagram, we can do this for any functor and for any evaluation, i.e, an algebra over it. Lets do this in the same way, by reading the diagram:
-
-Of course, the eval function can be parametriced as any function with signature `F[A] => A`. This kind of function is called an F-algebra over the fixed type A.
-
-
-
-Lets start doing it simple. Lets apply it to our basic example `RingF` and `evalToInt`. In this case, our implementation of `m` should be:
-
+So we are done! We achive our goal of lifting `evalToInt` to our recursive data type `Ring`. But, our implementation of `cata` looks pretty concrete for this case. As we can see in our first diagram, we can do this for any functor and for any evaluation, i.e, any algebra over it. Let's do this in the same way, by reading the diagram.
 
 ```scala
 def cata[F[_], A](alg: F[A] => A)(implicit F: Functor[F]): Fix[F] => A = {
     x => alg(F.map(cata(alg))(Fix.unfix(x)))
 }
 ```
-And, with this, we can call it by typing `cata(evalToInt)(ringFunctor)(exp1)`.
 
-### A real example: Lists and folds
+And, with this, we can call it by typing `cata(evalToInt)(ringFunctor)(exp1)`. One of the best properties of this way of building recursion is that there is no direct dependence between the algebra and recursion. All the steps required to traverse the structure are under the hood, so we don't need to worry about recursive calls, we only need to define our algebra in the most simple way. 
+
+One note about terminology: the name `cata` comes from catamorphism, which etymology comes from Greek and is the composed word cata, wich means  "downwards", and morphism, wich can be translated as "shape". So, this name fits very well with its behaviour.
+
+## Lists and folds
 
 ---
 
-At the very begining, we talk about Lists as an essential example of recursive data type. There is as well one basic operation over Lists implemented in scala called foldLeft. What this function do is to traverse the List structure evaluating, a function with an starting value. Lest see an example of this:
+At the very beginning, we talk about Lists as an essential example of recursive data type. There is as well one basic operation over Lists implemented in scala called foldRight. What this function does is to traverse the List structure by evaluating a function with a starting value. Lest see an example of this:
 
 ```scala
 val l1 = List("a", "b", "c")
@@ -260,7 +256,7 @@ l1.foldRight(0)((n, t) => n + 1)
 res44: Int = 3
 ```
 
-We need to read foldRight as: start with 0 and apply the function given while our next element is not Nil. This function compute the length of l1. If we look carefully, this function looks pretty similar to `cata`, where our algebra is the function acting over the base cases and then we lift it to traverse full list. Lets translate all of this using `Fix` and `cata`. So, lets implement our own foldLeft using cata. First, lets define the functor associated with `List`. To make it simple, we're gonna trait only `List[String]` to avoid type parameters.
+We need to read foldRight as: start with 0 and apply the function given while our next element is not Nil. The function above computes the length of l1. If we look carefully, this function looks pretty similar to `cata`, where our algebra is the function acting over the base cases. Let's translate all of this using `Fix` and `cata`. First, lets define the functor associated with `List`. To make it simple, we're gonna deal only with `List[String]` to avoid type parameters.
 
 ```scala
 sealed trait ListF[+A] 
@@ -292,10 +288,10 @@ val fixL1 = cons("a", cons("b", cons("c", nil)))
     <img src="examples/example8.png"/>
 </p>                            
 
-Finally, lets try to implement foldLeft using cata:
+Finally, let's try to implement foldRight using cata:
 
 ```scala 
-def myFoldLeft[A](baseValue: A)(evaluator: (String, A) => A)(l: ListString): A = {
+def myFoldRight[A](baseValue: A)(evaluator: (String, A) => A)(l: ListString): A = {
     def alg: ListF[A] => A = {
         case NilF => baseValue
         case ConsF(h, t) => evaluator(h, t)
@@ -304,14 +300,12 @@ def myFoldLeft[A](baseValue: A)(evaluator: (String, A) => A)(l: ListString): A =
 
 }
 
-myFoldLeft(0)((x, y) => y + 1)(fixL1)
+myFoldRight(0)((x, y) => y + 1)(fixL1)
 
 res35: Int = 3
 ```
 
-Of course, this is just a particular case, equivalent to `List[String]`.
-
-We have build the foldRight method of `List[String]` in terms of `cata`, but we can go further. It turns out that `foldRight` is as useful as `cata` in the sense that `foldRight` recreates general recursion. The joke is: _every recursive function over a recursive data type can be defined as a foldRight_ and, this is the same as `cata`. The reason of this is that we can translate cata (in some sense) into foldRigth. Lets do this in our main example `Ring`:
+We have built the `foldRight` method of `List[String]` in terms of `cata`, but we can go further. It turns out that `foldRight` is as useful as `cata` in the sense that `foldRight` recreates general recursion. The main idea is: _every recursive function over an inductive data type can be defined as a foldRight_. So, this is the same as `cata`. The reason of this is that we can translate cata (in some sense) into foldRigth. Lets do this in our main example `Ring`:
 
 ```scala
 def foldR[Z](e: Fix[RingF])(elem: Elem => Z)(add: (Z, Z) => Z)(mult: (Z, Z) => Z): Z = {
@@ -322,34 +316,34 @@ def foldR[Z](e: Fix[RingF])(elem: Elem => Z)(add: (Z, Z) => Z)(mult: (Z, Z) => Z
     }
 }
 ```
-of course, we can recreate `evalToInt` using this by writing: 
+Of course, we can recreate `evalToInt` using this by writing: 
 
 ```scala
-a: Ring = Fix(
+exp: Ring = Fix(
   Add(
     Fix(Add(Fix(Elem(3)), Fix(Elem(3)))),
     Fix(Add(Fix(Elem(3)), Fix(Elem(3))))
   )
 )
 
-foldR[Int](a)(x => x.x)((x, y) => x + y)((x,y) => x * y)
+foldR[Int](exp)(x => x.x)((x, y) => x + y)((x,y) => x * y)
 
 res61: Int = 12
 ```
 
-To justify that this is equivalent to `cata(evalToInt)(a)`, lets do some arguments about the signature of this function. First of all, the signature of foldR is:
+To justify that this is equivalent to `cata(evalToInt)(a)`, lets do some reasoning about the signature of this function. First of all, the signature of `foldR` is:
 
 <p align="center" >
     <img src="examples/example10.png" /> 
 </p>  
 
-And, using som basic type equivalences, we can turn this last expression into 
+And, using currying, we can turn this last expression into 
 
 <p align="center" >
     <img src="examples/example11.png" /> 
 </p>  
 
-And, finally, the signature of this triplet can be understood in scala as a trait. This has the signature of our algebra: 
+And, finally, the signature of this triplet can be understood in Scala as a trait. In fact, this has the signature of our algebra: 
 
 <p align="center" >
     <img src="examples/example12.png" /> 
@@ -361,19 +355,19 @@ And, of course, reading the composition of arrows we get the shape of cata:
     <img src="examples/example13.png" /> 
 </p>  
 
-So, as we have already see, `foldR` is exactly the same idea as `cata`, but in a more explicit way. In both caseswe have a general abstraction of recursion.
+So, as we have already see, `foldR` is exactly the same idea as `cata`, but in a more explicit way. In both cases, we have a general abstraction of recursion.
 
 ## A philosophical interpretation of folds and cata
 
 ---
 
-What we can conclude until this point is that cata is the abstraction of recursion. In some sense, the inductive type `Ring` is a set with elements inside it of the form of expressions. In the other hand, `cata` is a way of transforming evaluations of operations into real evaluations of an exaprssion. So, in some sense, `cata` is a way of looking to `Ring`: `cata` produces an observation of `Ring` for every algebra. A natural question can arise fom this point: _if we know all the observations  of an inductive type, can we know everything of that type?_. The answer is afirmative and is related to the motivation of cathegory theory. Lets build this equivalence for our example. We want to build an equivalence, in the same sense as we did with the equality `Fix[RingF] = RingF[Fix[RingF]]`. We need to build two functions with shape 
+What we can conclude at this point is that `cata` is the abstraction of recursion. In some sense, the inductive type `Ring` is a set with elements inside it in form of expressions. On the other hand, `cata` is a way of transforming evaluations of operations into real evaluations of  exapressions. So, in some sense, `cata` is a way of looking at `Ring`, i.e, `cata` produces an observation of `Ring` for every algebra. A natural question can arise from this point: _if we know all the observations  of an inductive type, can we know everything about that type?_ The answer is affirmative and is one of the motivations of cathegory theory. Let's build this equivalence for our example. We want to build an equivalence, in the same sense as we did with the equality `Fix[RingF] = RingF[Fix[RingF]]` and the pair `fix` and `unfix`. To do this, we need to build two functions with shape 
 
 <p align="center" >
     <img src="examples/example16.png" /> 
 </p> 
 
-and with the property that both compositions are the identity function. `Alg[Z]` is an abrevation for the signature `RingF[Z] => Z`. As we said before, this pair of functions with this property is called an isomorphism and we can write this signature in scala as: 
+and with the property that both compositions produces the identity function. `Alg[Z]` is an abbreviation for the signature `RingF[Z] => Z`. As we said before, this pair of functions with this property is called an isomorphism and we can write this signature in Scala as: 
 
 ```scala
 trait Iso[A, B] {
@@ -390,7 +384,7 @@ trait BBEnc {
     def apply[Z](alg: Alg[Z]): Z
 }
 ```
-So, our goal is almost done, the `to` arrow is `cata` because of the diagrams of the last section and, to build `from`, we only need to fix the objects while we are traversing the structure in the observations of `BBEnc`. All can be summarize in the following implementation of `Iso[Fix[RingF], BBEnc]`:
+So, our goal is almost done, the `to` arrow is `cata` by simply observing the diagrams of the last section and, to build `from`, we only need to fix the objects while we are traversing the structure in the observations of `BBEnc`. All can be summarized in the following implementation of `Iso[Fix[RingF], BBEnc]`:
 
 ```scala
 val RingIso = new Iso[Fix[RingF], BBEnc] {
@@ -426,16 +420,16 @@ RingIso.from(RingIso.to(expression1)) == expression1
 res73: Boolean = true
 ```
 
-As a conclussion, we can interpret inductive types as the set of all observations (evaluations) of a certain functor, i.e, the evaluation of algebras. This is, in fact, an apliccation of a very deep result called the **Yonneda lemma**, in cathegory theory. In this particular case, these interpretations are known as the **Böhm-Berarducci** encoding for the System F lambda calculus. This encoding explains the name of our type `BBEnc`. 
+As a conclusion, we can interpret inductive types as the set of all observations (evaluations) of a certain functor, i.e, the evaluation of algebras. This is, in fact, an application of a very deep result called the **Yonneda lemma**, in cathegory theory. In this particular case, these interpretations are known as the **Böhm-Berarducci** encoding for the System F lambda calculus. This encoding explains the name of our type `BBEnc`. 
 
 
 ## F-coalgebras and Anamorphisms
 
 ---
 
-If we think about the `evalToInt` function, what this function does is to reduce a tree of operations into an Integer. Imagine that we want to do some converse function, i.e, a function that takes an Int and produces a `Ring`. The signature for this function would be `Int => RingF[Int]`. In a more general case, we can take any fixed type `A` and any functor `F` and write `A => F[A]`. Functions with the previos signature are called F-coalgebras, because of duality with F-algebreas. 
+If we think about the `cata(evalToInt)` function, what this function does is to reduce a tree of operations into an Integer. Imagine that we want to do some converse function, i.e., a function that takes an `Int` and produces an element of `Ring`. The signature for this function would be `Int => RingF[Int]`. In a more general case, we can take any fixed type `A` and any functor `F` and write `A => F[A]`. Functions with the previous signature are called F-coalgebras, because of duality with F-algebras. 
 
-To take an example of this kind of function, we can use a function that, given an integer, produces the esxpression of products of its factors. As we have done before, lets do this for a base case (just spliting our number in a product of two others) and then we will try to lift this function to produce the full factorization of the given number. 
+To provide an example of this kind of function, we can use a function that, given an integer, produces the expression of products of its factors. As we have done before, let's do this for a base case (just splitting our number in a product of two others) and then we will try to lift this function to produce the full factorization of the given number. 
 
 For the base case, we can write:
 
@@ -456,13 +450,13 @@ def findDivisorsOf(r: Int): RingF[Int] = {
 
 ```
 
-For example, `findDivisorsof(6)` produces `res55: RingF[Int] = Mult(3, 2)`, but for `findDivisorsof(12)` we only get `res55: RingF[Int] = Mult(6, 2)` and we may want to keep factorizing the 6 as `Mult(3, 2)`. To do this, we need to produce a new diagram that represent the idea of lifting this function to the `Fix` of `RingF`. This can be done by reading our first diagram, but reversing the arrows:
+For example, `findDivisorsof(6)` produces `res55: RingF[Int] = Mult(3, 2)`, but for `findDivisorsof(12)` we only get `res55: RingF[Int] = Mult(6, 2)` and we may want to keep factorising the 6 as `Mult(3, 2)`. To do this, we need to produce a new diagram that represents the idea of lifting this function to the `Fix` of `RingF`. This can be done by reading our first diagram, but reversing the arrows:
 
 <p align="center" >
     <img src="examples/example6.png" /> 
 </p>  
 
-And, as we did before, we only need to read this diagram to get an implementation. The direct implemnetation, following the same argumens as with `cata`is 
+And, as we did before, we only need to read this diagram to get an implementation. The direct implementation, following the same arguments as with `cata`is:
 
 ```scala
 def ana[F[_], A](coalg: A => F[A])(implicit F: Functor[F]): A => Fix[F] = {
@@ -470,7 +464,9 @@ def ana[F[_], A](coalg: A => F[A])(implicit F: Functor[F]): A => Fix[F] = {
 }
 ```
 
-Asyou can see, this new lifter function is called ana. And now, all we need to do is to call `ana(findDivisors)(ringFunctor)(n)` to get a full expresion that represent the factorization of n. For example:
+As you can see, this new lifter function is called ana. This name comes from the greek word anamorphism, which is the composition of the word ana("upward") and, morphism("shape"). Of course, the meaning of this word is dual with catamprphism. 
+
+At this moment, all we need to do is to call `ana(findDivisors)(ringFunctor)(n)` to get a full expression that represents the factorization of n. For example:
 
 ```scala
 val expression3 = ana(findDivisorsOf)(ringFunctor)(12)
@@ -479,6 +475,7 @@ expression3: Fix[RingF] = Fix(
   Mult(Fix(Mult(Fix(Elem(3)), Fix(Elem(2)))), Fix(Elem(2)))
 )
 ```
+
 <p align="center" >
     <img src="examples/example5.png" /> 
 </p>  
@@ -487,13 +484,13 @@ expression3: Fix[RingF] = Fix(
 
 ---
 
-Now we can build expressions from integers using `ana`and know how to reduce it using `cata` so we can combine both reading the direct diagram:
+Now,,we can build expressions from integers using `ana`and know how to reduce it using `cata`. We can combine both to get a new evaluator by reading the direct diagram:
 
 <p align="center" >
     <img src="examples/example9.png" /> 
 </p>  
 
-The new function we get (`ana o cata`) is callled hylomorphism, and is pretty usefull. For example, we can use it to check that or `findDivisorsOf` and `evalToInt` rise the starting value if we did it one after another:
+The new function (`ana o cata`) is called hylomorphism and is pretty useful. For example, we can use it to check that our `findDivisorsOf` and `evalToInt` raise the starting value if we did one after another:
 
 ```scala
 def hylo[A, B, F[_]](ev1: A => F[A])(ev2: F[B] => B)(implicit functor: Functor[F]): A => B = {
@@ -505,7 +502,7 @@ hylo(findDivisorsOf)(evalToInt)(ringFunctor)(12)
 res40: Int = 12
 ```
 
-It works! But this is not so usefull, because we are getting the identity. Lets try to implemente a more fancy function. For example, lets write a simple fution to represent the factorization of an integer as a String. To do this, we need first a pretty print function and then simple apply hylo to it with findDivisorsOf.
+It works! Let's try to implement a more fancy function. For example, let's write a simple function to represent the factorization of an integer as a String. To do this, we need first a `prettyPrint` function and then apply `hylo` to it with `indDivisorsOf`.
 
 ```scala
 def prettyPrint: RingF[String] => String = {
@@ -521,12 +518,13 @@ hylo(findDivisorsOf)(prettyPrint)(ringFunctor)(12)
 ---
 res44: String = "3 * 2 * 2"
 ```
+Nice! We are using all our abstract functions to get pretty nice functionalities.
 
-## Morphisms between recursive structures
+## Morphisms between inductive structures
 
 ---
 
-We are gonne to end this talk with one last comment about recursive strctures. We have allready seen functions to evaluate (cata) and to generate (ana) recursive data types. But what if we want to use a function between recursive data Types, for example, a function `reduce: Ring => Ring` that simplifies expresions as `x + x => 2*x`. This can be made using our `Fix` and a special kind of algebra. The algebra we are gonne use has signature `RingF[Fix[RingF]] => Fix[RingF]`, because we need to work over the general recursive case. Take a look to the implementation of this:
+We are going to end this talk with one last comment about inductive structures. We have already seen functions to evaluate (catamorphism) and to generate (anamorphism) inductive data types. But what happens if we want to use a function between inductive data Types? For instance, a function `reduce: Ring => Ring` that simplifies expressions as `x + x => 2*x`. This can be made by using our `Fix` and a special kind of algebra. The algebra has signature `RingF[Fix[RingF]] => Fix[RingF]`, because we need to work over the general case. Take a look to the implementation of this:
 
 ```scala
 def reduce[A]: RingF[Fix[RingF]] => Fix[RingF] = {
@@ -548,13 +546,13 @@ def reduce: Ring => Ring = {
 }
 ```
 
-Take a look to the shape of this function. It has a lot of recursive calls in so many places, what is error prompt and, second, its to verbose, because all is the same but for the case Add(x,x). This is one of the advantage of the recursion scheme pattern. 
+Take a look at the shape of this function. It has a lot of recursive calls in so many places, what is error-prone and, second, its to verbose, because all is the same but for the case Add(x,x). This is one of the advantage of the recursion scheme pattern. 
 
 ## Conclusions and References
 
 ---
 
-We have seen the recursion scheme pattern with lot of examples. The main functions has been presented but we have left under the hood some details and mathematical justifications of the results, but I tried to focus on the intuition and the constantly relation between mathematical diagrams and code, which is a funny way of writing code. 
+We have seen the recursion scheme pattern with a lot of examples. The main functions has been presented but we have left under the hood some details and mathematical justifications of the results. I tried to focus on the intuition and the constantly relation between mathematical diagrams and code, which is a funny way of writing code. 
 
 Some references I used to write this post are:
 
