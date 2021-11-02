@@ -37,11 +37,11 @@ With these examples we can observe two behaviors:
 
    1) Every inductive structure uses its own type to define the rule to build the next iteration.
     
-   2) Every recursive function with domain an inductive data type needs to traverse the structure until the base case and them iterates to produce the result.
+   2) Every recursive function whose domain is an inductive data type needs to traverse the structure until the base case and then iterates to produce the result.
    
-These observations are pretty well defined over the previous examples. But, in general, the definition of recursive functions needs to use the recursive calls in some key points and, in so many cases, these points are not so clear. This may cause errors during the definition of recursive functions. For this reason, it would be interesting to have a clear separation between the recursion step and the base cases. In fact, what we will try to build is a blueprint for general recursion. The shape of this blueprint can be resumed as:
+These observations are pretty well defined over the previous examples. But, in general, the definition of recursive functions needs to use the recursive calls in some key points and, in so many cases, these points are not so clear. This may cause errors during the definition of recursive functions. For this reason, it would be interesting to have a clear separation between the recursion step and the base cases. In fact, what we will try to build is a blueprint for general recursion. The shape of this blueprint can be summarized as:
 
-   1) Give me a functor `F[A]` and a way to evaluate it for a fixed type B (think in the evaluation of an expression to an integer). `F[A]` will represent a general inductive step, but without any reference to previous cases. The role of the evaluation can be seen as a single step of the recursive function.
+   1) Give me the basic rules of the inductive data type and encapsulate it in some type constructor `F[_]` (we will see later that this type constructor is a functor) and a way to evaluate it for a fixed type `A`. `F[A]` will represent a general inductive step, but without any reference to previous cases. The role of the evaluation can be seen as a single step of the recursive function.
    
    2) I have a magic type constructor to turn `F[A]` into its associated inductive type and a way to lift the base case evaluations to an evaluator that traverse the inductive type.
    

@@ -2,6 +2,10 @@
 \usepackage{tikz-cd}
 
 \begin{document}
+\begin{tikzcd}
+{F[Fix[F]]} \arrow[r] \arrow[d, "fix", bend left, shift left] & \cdots \arrow[r] & {F[F[F[A]]]} \arrow[rr, "map(map(f))"]           &  & {F[F[A]]} \arrow[r, "map(f)"]           & {F[A]} \arrow[r, "f"] & A \\
+{Fix[F]} \arrow[r] \arrow[u, "unfix", bend left]              & \cdots \arrow[r] & {F[F[A]]} \arrow[rr, "map(f)"] \arrow[u, dotted] &  & {F[A]} \arrow[r, "f"] \arrow[u, dotted] & A \arrow[u, dotted]   &  
+\end{tikzcd}
 
 \begin{tikzcd}
 A \arrow{r}{\phi} \arrow[swap]{d}{\varrho_f} & B \arrow{d}{\varrho_g} \\
