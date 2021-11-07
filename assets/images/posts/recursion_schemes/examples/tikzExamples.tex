@@ -1,0 +1,60 @@
+\documentclass[convert={density=300,size=1080x800,outext=.png}]{standalone}
+\usepackage{tikz-cd}
+
+\begin{document}
+\begin{tikzcd}
+{F[Fix[F]]} \arrow[r] \arrow[d, "fix", bend left, shift left] & \cdots \arrow[r] & {F[F[F[A]]]} \arrow[rr, "map(map(f))"]           &  & {F[F[A]]} \arrow[r, "map(f)"]           & {F[A]} \arrow[r, "f"] & A \\
+{Fix[F]} \arrow[r] \arrow[u, "unfix", bend left]              & \cdots \arrow[r] & {F[F[A]]} \arrow[rr, "map(f)"] \arrow[u, dotted] &  & {F[A]} \arrow[r, "f"] \arrow[u, dotted] & A \arrow[u, dotted]   &  
+\end{tikzcd}
+
+\begin{tikzcd}
+A \arrow{r}{\phi} \arrow[swap]{d}{\varrho_f} & B \arrow{d}{\varrho_g} \\
+A_f \arrow{r}{\varphi_f}& B_g
+\end{tikzcd}
+
+\begin{tikzcd}
+{RingF[Fix[RingF]]} \arrow[rr, "map(m)"] \arrow[d, "fix"', bend right] &  & {RingF[Int]} \arrow[d, "evalToInt"] \\
+{Fix[RingF]} \arrow[rr, "m"] \arrow[u, "unfix"', bend right]           &  & Int                                
+\end{tikzcd}
+
+\begin{tikzcd}
+{F[Fix[F]]} \arrow[d, "fix", bend left] &  & {F[A]} \arrow[ll, "map(m)"']           \\
+{Fix[F]} \arrow[u, "unfix", bend left]  &  & A \arrow[u, "coeval"'] \arrow[ll, "m"]
+\end{tikzcd}
+
+\begin{tikzcd}
+A \arrow[r, "ana"] \arrow[rr, "cata\circ ana"', bend right] & {Fix[RingF]} \arrow[r, "cata"] & B
+\end{tikzcd}
+
+
+\begin{tikzcd}
+{Fix[RingF]} \arrow[rr, Rightarrow] &  & {(Int\rightarrow Z, (Z,Z)\rightarrow Z, (Z,Z)\rightarrow Z)} \arrow[r] & Z) \arrow[rr, Rightarrow] &  & Z
+\end{tikzcd}
+
+\begin{tikzcd}
+{Fix[RingF]} \arrow[rr, Rightarrow] &  & {(Either[Elem, (Z, Z), (Z, Z)]}\arrow[r] & Z) \arrow[rr, Rightarrow] &  & Z
+\end{tikzcd}
+
+\begin{tikzcd}
+{Fix[RingF]} \arrow[rr, Rightarrow] &  & {(RingF[Z]} \arrow[r, "alg"] & Z) \arrow[r, Rightarrow] & Z
+\end{tikzcd}
+
+\begin{tikzcd}
+{Fix[RingF]} \arrow[rr, Rightarrow] \arrow[rrrr, "cata(alg)"', bend right] &  & {(RingF[Z]} \arrow[r, "alg"] & Z) \arrow[r, Rightarrow] & Z
+\end{tikzcd}
+
+
+\begin{tikzcd}
+{F[A]} \arrow[rr, "map(f)"]               & {}                          & {F[B]}                    \\
+A \arrow[rr, "f"'] \arrow[u, "F", dotted] & {} \arrow[u, "map", dotted] & B \arrow[u, "F"', dotted]
+\end{tikzcd}
+
+\begin{tikzcd}
+{RingF[RingF[Int]]} \arrow[rr, "map(evalToInt)"] \arrow[rrrr, "evalToInt\quad\circ\quad map(evalToInt)", bend left] & {}                           & {RingF[Int]} \arrow[rr, "evalToInt"] &  & Int \\
+{RingF[Int]} \arrow[rr, "evalToInt"'] \arrow[u, "RingF", dotted]                                                  & {} \arrow[u, "map"', dotted] & Int \arrow[u, "RingF"', dotted]      &  &    
+\end{tikzcd}
+
+\begin{tikzcd}
+{Fix[RingF]} \arrow[rr, "to", bend left] &  & {(Alg[Z]} \arrow[r] \arrow[ll, "from", bend left] & Z)
+\end{tikzcd}
+\end{document} 
